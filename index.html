@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>在線，但不在身邊｜沉浸式線上策展</title>
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --text: #e0e4e8;
+      --muted: rgba(255,255,255,0.58);
+      --line: rgba(255,255,255,0.08);
+      --accent: #5e81ff;
+      --shadow: 0 20px 60px rgba(0,0,0,0.55);
+      --radius: 24px;
+      --topbar-h: 84px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y proximity;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+        "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -5%;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(94, 129, 255, 0.08), transparent 35%),
+        radial-gradient(circle at 82% 22%, rgba(255, 255, 255, 0.03), transparent 25%),
+        radial-gradient(circle at 52% 78%, rgba(80, 80, 80, 0.10), transparent 35%),
+        linear-gradient(180deg, #050505 0%, #121214 100%);
+      z-index: -5;
+      will-change: transform, opacity;
+      animation: bgBreath 15s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.09;
+      z-index: -4;
+      pointer-events: none;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+    }
+
+    @keyframes bgBreath {
+      0% { transform: scale(1) translateY(0); opacity: 1; }
+      100% { transform: scale(1.05) translateY(-10px); opacity: 0.72; }
+    }
+
+    .opening {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.02), transparent 45%),
+        linear-gradient(180deg, rgba(5,5,5,0.98), rgba(10,10,12,1));
+      transition: opacity 1.2s ease, visibility 1.2s ease;
+    }
+
+    .opening.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .opening-inner {
+      width: min(100%, 920px);
+      text-align: center;
+      animation: openingRise 1.2s ease forwards;
+    }
+
+    @keyframes openingRise {
+      from { opacity: 0; transform: translateY(20px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .opening-date {
+      color: rgba(255,255,255,0.32);
+      letter-spacing: 0.16em;
+      font-size: clamp(0.75rem, 2vw, 0.9rem);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .opening-title {
+      font-size: clamp(2.2rem, 10vw, 6.2rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      margin-bottom: 18px;
+      min-height: 2.2em;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 0.06em;
+      background: rgba(255,255,255,0.6);
+      margin-left: 0.08em;
+      animation: cursorBlink 0.8s infinite;
+      vertical-align: baseline;
+    }
+
+    @keyframes cursorBlink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    .opening-quote {
+      font-size: clamp(0.98rem, 3.6vw, 1.22rem);
+      color: rgba(255,255,255,0.62);
+      line-height: 1.8;
+      max-width: 760px;
+      margin: 0 auto 28px;
+      min-height: 70px;
+    }
+
+    .opening-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn, .btn-ghost, .mini-btn, .top-btn {
+      border-radius: 999px;
+      transition: 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      white-space: nowrap;
+      font: inherit;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      background: #e0e4e8;
+      color: #0a0a0c;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-ghost, .mini-btn, .top-btn {
+      background: rgba(255,255,255,0.03);
+      color: #e0e4e8;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .btn-ghost { padding: 14px 24px; }
+    .mini-btn, .top-btn { padding: 10px 16px; font-size: 0.9rem; }
+
+    .btn:hover { background: #fff; transform: translateY(-2px); }
+    .btn-ghost:hover, .mini-btn:hover, .top-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: calc(env(safe-area-inset-top, 0px) + 14px) 20px 14px;
+      background: linear-gradient(to bottom, rgba(5,5,5,0.9), rgba(5,5,5,0.18));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      font-size: 0.9rem;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.72);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
+    }
+
+    .top-actions::-webkit-scrollbar {
+      display: none;
+    }
+
+    .section {
+      position: relative;
+      min-height: 100dvh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 108px 24px 84px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      scroll-margin-top: 100px;
+    }
+
+    .parallax-bg {
+      position: absolute;
+      inset: -10%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .scene-gradient-1 {
+      background: radial-gradient(circle at 20% 30%, rgba(94,129,255,0.05), transparent 30%);
+    }
+
+    .scene-gradient-2 {
+      background: radial-gradient(circle at 80% 60%, rgba(255,255,255,0.02), transparent 30%);
+    }
+
+    .scene-gradient-3 {
+      background: radial-gradient(circle at 50% 50%, rgba(100,100,100,0.04), transparent 40%);
+    }
+
+    .layer {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(40px);
+      opacity: 0.15;
+    }
+
+    .layer.a { width: 300px; height: 300px; top: 10%; left: 5%; background: rgba(94,129,255,0.1); }
+    .layer.b { width: 250px; height: 250px; bottom: 20%; right: 10%; background: rgba(200,200,200,0.05); }
+
+    .section-inner {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 1080px);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1s ease 0.2s, transform 1s ease 0.2s;
+    }
+
+    .section.show .section-inner {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    h1, h2, h3 {
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    h1 { font-size: clamp(2.2rem, 8vw, 5.2rem); }
+    h2 { font-size: clamp(1.8rem, 6vw, 3.8rem); margin-bottom: 16px; }
+    h3 { font-size: clamp(1.05rem, 3vw, 1.3rem); }
+
+    .lead {
+      font-size: clamp(1rem, 3vw, 1.16rem);
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 680px;
+      margin-top: 20px;
+    }
+
+    .hero-grid, .split-grid, .resource-grid, .social-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .hero-grid { grid-template-columns: 1.2fr 0.8fr; align-items: center; }
+    .split-grid { grid-template-columns: 1fr 1fr; align-items: center; }
+    .resource-grid, .social-grid { grid-template-columns: repeat(2, 1fr); margin-top: 32px; }
+
+    .panel, .card, .resource-card, .social-card, .podcast-card, .chat-box {
+      background: rgba(25, 25, 28, 0.42);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(22px, 4vw, 30px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .muted {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: clamp(0.95rem, 3vw, 1.03rem);
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+      min-height: 90px;
+    }
+
+    .tag {
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.72);
+      transition: 0.3s ease;
+    }
+
+    .tag.active {
+      background: rgba(94,129,255,0.15);
+      border-color: rgba(94,129,255,0.4);
+      color: #fff;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .chat-wrap {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .chat-box {
+      background: rgba(10, 10, 12, 0.84);
+      padding: 24px;
+    }
+
+    .chat-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.85rem;
+    }
+
+    .bubble-row { display: flex; margin-bottom: 12px; }
+    .bubble-row.me { justify-content: flex-end; }
+
+    .bubble {
+      max-width: 80%;
+      padding: 14px 18px;
+      border-radius: 20px;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .outgoing {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-status {
+      margin-top: 8px;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.8rem;
+      text-align: right;
+    }
+
+    .quote-box {
+      margin-top: 20px;
+      padding: 24px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.8);
+      line-height: 1.8;
+      font-size: 1rem;
+      text-align: center;
+      font-style: italic;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .resource-link {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    #backToTop, #backToOpening {
+      position: fixed;
+      right: 16px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      cursor: pointer;
+      z-index: 120;
+      backdrop-filter: blur(10px);
+      transition: 0.3s ease;
+    }
+
+    #backToOpening { bottom: 76px; }
+    #backToTop { bottom: 16px; }
+
+    #backToTop:hover, #backToOpening:hover {
+      background: rgba(255,255,255,0.1);
+      transform: scale(1.05);
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+      padding: 40px 20px calc(40px + env(safe-area-inset-bottom, 0px));
+      color: rgba(255,255,255,0.42);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .split-grid, .resource-grid, .social-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      html {
+        scroll-snap-type: none;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(to bottom, rgba(5,5,5,0.95), rgba(5,5,5,0.82));
+      }
+
+      .top-actions {
+        width: 100%;
+        padding-bottom: 4px;
+      }
+
+      .section {
+        padding: 132px 16px 84px;
+        scroll-margin-top: 128px;
+      }
+
+      .btn, .btn-ghost {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+      }
+
+      #backToTop, #backToOpening {
+        right: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="opening" id="opening">
+    <div class="opening-inner">
+      <div class="opening-date" id="todayDate"></div>
+      <div class="opening-title" id="typewriterTitle"></div>
+      <div class="opening-quote" id="openingQuote"></div>
+      <div class="opening-actions">
+        <button class="btn" id="enterBtn" type="button">進入展覽</button>
+        <button class="btn-ghost" id="refreshQuoteBtn" type="button">換一句語錄</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand">Online but distant</div>
+    <div class="top-actions">
+      <button class="top-btn" id="musicBtn" type="button">音樂：關</button>
+      <a class="top-btn" href="#socials">官方平台</a>
+      <a class="top-btn" href="#podcast">Podcast</a>
+      <a class="top-btn" href="#resources">心理資源</a>
+    </div>
+  </div>
+
+  <section class="section show" id="hero">
+    <div class="parallax-bg scene-gradient-1">
+      <div class="layer a"></div>
+    </div>
+    <div class="section-inner">
+      <div class="hero-grid">
+        <div>
+          <h1>不是沒有人在，<br>只是沒有人靠近。</h1>
+          <p class="lead">
+            我們每天活在通知、訊息、限動與演算法裡。
+            看起來永遠在線，實際上卻越來越習慣沉默。
+            《在線，但不在身邊》想談的，不只是孤單，而是這個時代的連結方式。
+          </p>
+          <div class="action-row">
+            <a class="btn" href="#scene1">開始觀看</a>
+            <a class="btn-ghost" href="#socials">官方平台</a>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:12px;">關於這場展覽</h3>
+          <p class="muted">
+            這是一段緩慢經過的情緒路徑。向下翻頁，重新感受那些在線卻不靠近的時刻。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="scene1">
+    <div class="parallax-bg scene-gradient-2"></div>
+    <div class="section-inner">
+      <h2>你在線</h2>
+      <p class="lead">
+        早上醒來看通知，課堂中回訊息，午餐刷短影片，晚上睡前再看一次社群。
+        你的手很忙，心卻很靜。
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="scene2">
+    <div class="parallax-bg scene-gradient-3"></div>
+    <div class="section-inner">
+      <div class="split-grid">
+        <div>
+          <h2>你被看見</h2>
+          <p class="lead">
+            限動被看過，貼文被按讚，聊天室一直跳通知。可是當你真的難過時，那些互動突然都變得很薄。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:12px;">社群不是陪伴本身</h3>
+          <p class="muted">
+            被看見，不等於被理解。被點開，不等於被接住。這一幕想談的，是數位互動的表面熱度。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="scene3">
+    <div class="parallax-bg scene-gradient-1"></div>
+    <div class="section-inner">
+      <h2>你被分類</h2>
+      <p class="lead">
+        演算法總是比你更快定義你。今天的你，被系統歸類成什麼樣的人？
+      </p>
+      <div class="tags" id="tagContainer">
+        <div class="tag active">#安靜</div>
+        <div class="tag">#已讀不回</div>
+        <div class="tag">#看起來很好</div>
+        <div class="tag">#不太主動</div>
+      </div>
+      <div class="action-row">
+        <button class="mini-btn" id="shuffleTagsBtn" type="button">重新分類我</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="scene4">
+    <div class="parallax-bg scene-gradient-2"></div>
+    <div class="section-inner">
+      <h2>已讀，不回</h2>
+      <p class="lead">
+        這裡只有你發出的訊息，和一個冷冷的已讀。
+      </p>
+      <div class="chat-wrap">
+        <div class="chat-box">
+          <div class="chat-head">
+            <span>對話模擬</span>
+            <span>23:41</span>
+          </div>
+          <div class="bubble-row me">
+            <div class="bubble outgoing" id="outgoingBubble">你今天還好嗎？</div>
+          </div>
+          <div class="chat-status" id="chatStatus">已讀 23:42</div>
+        </div>
+        <div class="action-row" style="justify-content:center;">
+          <button class="mini-btn" id="playChatBtn" type="button">換一句訊息</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="scene5">
+    <div class="parallax-bg scene-gradient-3"></div>
+    <div class="section-inner">
+      <div class="split-grid">
+        <div>
+          <h2>你消失</h2>
+          <p class="lead">
+            不是所有離線都是真的離線。有時候你只是在每一段關係裡，慢慢把自己收回去。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:12px;">今天的孤單語錄</h3>
+          <div class="quote-box" id="quoteBox">有些沉默，不是不想說，而是不知道該怎麼說。</div>
+          <div class="action-row">
+            <button class="mini-btn" id="quoteBtn" type="button">生成語錄</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="scene6">
+    <div class="parallax-bg scene-gradient-1"></div>
+    <div class="section-inner">
+      <h2>回到自己</h2>
+      <p class="lead">
+        孤單不是錯，也不代表你有問題。它有時只是提醒你：你需要真正的連結，而不是更多訊息。
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="socials">
+    <div class="parallax-bg scene-gradient-2"></div>
+    <div class="section-inner">
+      <h2>官方平台</h2>
+      <p class="lead">
+        展覽的延伸敘事散落在不同平台。每一次觀看、停留與互動，都是這場策展的一部分。
+      </p>
+
+      <div class="social-grid">
+        <div class="social-card">
+          <h3>Instagram</h3>
+          <p>以視覺碎片與情緒片段延伸展覽敘事。</p>
+          <a class="resource-link" href="https://www.instagram.com/half_online?igsh=MWJ0YWprYXR0MWdscA==" target="_blank" rel="noopener noreferrer">前往 IG</a>
+        </div>
+
+        <div class="social-card">
+          <h3>Threads</h3>
+          <p>以文字與片段情緒延續展覽中的討論與共鳴。</p>
+          <a class="resource-link" href="https://www.threads.com/@half_online?igshid=NTc4MTIwNjQ2YQ==" target="_blank" rel="noopener noreferrer">前往 Threads</a>
+        </div>
+
+        <div class="social-card">
+          <h3>LINE</h3>
+          <p>作為提醒、陪伴與展期互動的延伸入口。</p>
+          <span class="resource-link" style="opacity:.55; cursor:default;">連結待加入</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="podcast">
+    <div class="parallax-bg scene-gradient-3"></div>
+    <div class="section-inner">
+      <h2>聆聽 Podcast</h2>
+      <p class="lead">
+        有些情緒無法被畫面完整承接，於是它們轉化成聲音。這裡收納那些更慢、更深的說話方式。
+      </p>
+
+      <div class="podcast-card">
+        <h3>聲音篇章</h3>
+        <p class="muted">
+          請戴上耳機，在一段不必急著回覆的時間裡，聽見那些被留在訊息之外的情緒。
+        </p>
+        <div class="action-row">
+          <button class="mini-btn" type="button" disabled>即將上線</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="resources">
+    <div class="parallax-bg scene-gradient-1"></div>
+    <div class="section-inner">
+      <h2>如果你真的很累</h2>
+      <p class="lead">
+        你不需要一個人撐著。當孤單已經影響到情緒與生活，求助不是脆弱，而是照顧自己。
+      </p>
+
+      <div class="resource-grid">
+        <div class="resource-card">
+          <h3>臺北市心理衛生中心</h3>
+          <p>提供心理健康資訊、資源與相關協助窗口。</p>
+          <a class="resource-link" href="https://mental-health.gov.taipei/" target="_blank" rel="noopener noreferrer">前往網站</a>
+        </div>
+        <div class="resource-card">
+          <h3>銘傳大學諮商輔導中心</h3>
+          <p>可進一步了解校內諮商與輔導相關資源。</p>
+          <a class="resource-link" href="https://cpc.mcu.edu.tw/%E8%AB%AE%E5%95%86%E8%BC%94%E5%B0%8E%E4%B8%AD%E5%BF%83/" target="_blank" rel="noopener noreferrer">前往網站</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <button id="backToOpening" title="回到起始頁">⟲</button>
+  <button id="backToTop" title="回到最上方">↑</button>
+
+  <footer class="footer">
+    《在線，但不在身邊》沉浸式線上策展 © 2026
+  </footer>
+
+  <script>
+    const openingQuotes = [
+      "我們不是沒有被看見，只是很少被真正理解。",
+      "有些孤單不是沒有人陪，而是沒有人靠近你真正的情緒。",
+      "你每天都在線，卻不一定在任何人的心裡停留。",
+      "訊息很多，能承接你的人很少。"
+    ];
+
+    const quotes = [
+      "我一直都在線，只是越來越不知道要跟誰說話。",
+      "不是沒有人找我，是沒有人真的走進來。",
+      "我看起來很正常，但其實已經安靜很久了。",
+      "原來最遠的距離，不是離線，而是已讀不回。"
+    ];
+
+    const tagSets = [
+      ["#安靜", "#已讀不回", "#看起來很好", "#不太主動"],
+      ["#在線", "#低電量社交", "#習慣沉默", "#不想解釋"],
+      ["#很多人認識", "#很少人理解", "#表面正常", "#內心擁擠"]
+    ];
+
+    const unreadMessages = [
+      "你今天還好嗎？",
+      "剛剛想到你。",
+      "如果你想說，我在。",
+      "最近是不是很累？"
+    ];
+
+    const titleText = "在線，但不在身邊";
+    const typewriterTitle = document.getElementById("typewriterTitle");
+    const todayDate = document.getElementById("todayDate");
+    const openingQuote = document.getElementById("openingQuote");
+    const refreshQuoteBtn = document.getElementById("refreshQuoteBtn");
+    const opening = document.getElementById("opening");
+    const enterBtn = document.getElementById("enterBtn");
+
+    function formatToday() {
+      return new Date().toLocaleDateString('zh-TW').replace(/\//g, '.');
+    }
+
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function typeWriter(text, el, speed = 120) {
+      let i = 0;
+      el.innerHTML = "";
+      const cursor = '<span class="cursor"></span>';
+      const timer = setInterval(() => {
+        el.innerHTML = text.slice(0, i + 1) + cursor;
+        i++;
+        if (i >= text.length) {
+          clearInterval(timer);
+          el.innerHTML = text + cursor;
+        }
+      }, speed);
+    }
+
+    todayDate.textContent = formatToday();
+    openingQuote.textContent = randomFrom(openingQuotes);
+    typeWriter(titleText, typewriterTitle, 100);
+
+    refreshQuoteBtn.addEventListener("click", () => {
+      openingQuote.textContent = randomFrom(openingQuotes);
+    });
+
+    const sections = document.querySelectorAll(".section");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("show");
+      });
+    }, { threshold: 0.35 });
+
+    sections.forEach((sec) => observer.observe(sec));
+
+    document.getElementById("shuffleTagsBtn").addEventListener("click", () => {
+      const set = randomFrom(tagSets);
+      const container = document.getElementById("tagContainer");
+      container.innerHTML = set.map((t, i) => `<div class="tag ${i===0?'active':''}">${t}</div>`).join('');
+    });
+
+    document.getElementById("quoteBtn").addEventListener("click", () => {
+      document.getElementById("quoteBox").textContent = randomFrom(quotes);
+    });
+
+    document.getElementById("playChatBtn").addEventListener("click", () => {
+      document.getElementById("outgoingBubble").textContent = randomFrom(unreadMessages);
+      const now = new Date();
+      document.getElementById("chatStatus").textContent =
+        `已讀 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    });
+
+    let audioCtx = null;
+    let masterGain = null;
+    let musicStarted = false;
+    let musicOn = false;
+    const musicBtn = document.getElementById("musicBtn");
+
+    function createPianoNote(freq, startTime, duration, velocity = 0.14) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const lowpass = audioCtx.createBiquadFilter();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      lowpass.type = "lowpass";
+      lowpass.frequency.setValueAtTime(1500, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(velocity, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.05, startTime + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      osc.connect(lowpass);
+      lowpass.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    }
+
+    function scheduleSadPianoLoop() {
+      const now = audioCtx.currentTime + 0.05;
+      const tempo = 70;
+      const beat = 60 / tempo;
+      const progression = [
+        [220.00, 261.63, 329.63],
+        [196.00, 246.94, 293.66],
+        [174.61, 220.00, 261.63],
+        [164.81, 207.65, 246.94]
+      ];
+
+      progression.forEach((chord, barIndex) => {
+        const barStart = now + barIndex * beat * 4;
+        createPianoNote(chord[0], barStart, 1.6, 0.10);
+        createPianoNote(chord[1], barStart + beat * 0.5, 1.4, 0.07);
+        createPianoNote(chord[2], barStart + beat * 1.5, 1.2, 0.05);
+        createPianoNote(chord[1], barStart + beat * 2.5, 1.0, 0.045);
+      });
+    }
+
+    function startSadPiano() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.1;
+        masterGain.connect(audioCtx.destination);
+      }
+
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      if (!musicStarted) {
+        scheduleSadPianoLoop();
+        const loopDurationMs = Math.round((60 / 70) * 4 * 4 * 1000);
+        setInterval(scheduleSadPianoLoop, loopDurationMs);
+        musicStarted = true;
+      }
+
+      musicOn = true;
+      musicBtn.textContent = "音樂：開";
+    }
+
+    function stopSadPiano() {
+      if (audioCtx) audioCtx.suspend();
+      musicOn = false;
+      musicBtn.textContent = "音樂：關";
+    }
+
+    musicBtn.addEventListener("click", () => {
+      try {
+        if (!musicOn) startSadPiano();
+        else stopSadPiano();
+      } catch (e) {
+        alert("目前瀏覽器無法播放音樂。");
+      }
+    });
+
+    enterBtn.addEventListener("click", () => {
+      opening.classList.add("hide");
+      try { startSadPiano(); } catch (e) {}
+      setTimeout(() => document.getElementById("hero").scrollIntoView({ behavior: "smooth" }), 250);
+    });
+
+    document.getElementById("backToTop").addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("backToOpening").addEventListener("click", () => {
+      window.scrollTo({ top: 0 });
+      opening.classList.remove("hide");
+      if (audioCtx) {
+        audioCtx.suspend();
+        musicOn = false;
+        musicBtn.textContent = "音樂：關";
+      }
+      typeWriter(titleText, typewriterTitle, 100);
+      openingQuote.textContent = randomFrom(openingQuotes);
+    });
+  </script>
+</body>
+</html>
